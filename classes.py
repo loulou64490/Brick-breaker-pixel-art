@@ -1,18 +1,60 @@
 import math
-
-import pygame  # Le module Pygame
+import pygame
+import random
 
 from constantes import *
 
 screen = pygame.display.set_mode((XMAX, YMAX), pygame.SCALED)
 
+# Liste des couleurs disponibles pour les briques
+COULEURS_DISPONIBLES = ['bleue', 'verte', 'jaune', 'orange', 'rouge', 'violette']
+
+# Structure pour les types de briques:
+# 'type': (largeur, hauteur, nombre_de_vies, {couleur: (x_base, y_base)})
+# où x_base et y_base sont les coordonnées de la première brique (niveau de vie max)
+TYPES_BRIQUES = {
+    'standard': (32, 9, 3, {
+        'bleue': (0, 7),
+        'verte': (0, 23),
+        'jaune': (0, 39),
+        'orange': (0, 55),
+        'rouge': (0, 71),
+        'violette': (0, 87)
+    }),
+    'moyenne': (32, 16, 3, {
+        'bleue': (112, 0),
+        'verte': (112, 16),
+        'jaune': (112, 32),
+        'orange': (112, 48),
+        'rouge': (112, 64),
+        'violette': (112, 80)
+    }),
+    'petite': (16, 16, 2, {
+        'bleue': (224, 0),
+        'verte': (224, 16),
+        'jaune': (224, 32),
+        'orange': (224, 48),
+        'rouge': (224, 64),
+        'violette': (224, 80)
+    })
+}
+
 # Dictionnaire contenant les positions et tailles des sprites dans les sprite sheets
-# Format: 'nom_sprite': (nom_feuille, x, y, largeur, hauteur)
 sprites = {
     'balle': ('sprites', 144, 8, 8, 8),
     'raquette': ('sprites', 64, 7, 32, 9),
-    'brique_grise': ('bricks', 0, 7, 32, 9),
 }
+
+# Génération automatique des sprites pour tous les types de briques
+for type_brique, (largeur, hauteur, nb_vies, positions) in TYPES_BRIQUES.items():
+    for couleur, (x_base, y_base) in positions.items():
+        for niveau in range(nb_vies, 0, -1):
+            # Calculer la position X en fonction du niveau de vie et de la position de base
+            x = x_base + (nb_vies - niveau) * largeur
+            
+            # Ajouter au dictionnaire
+            nom_sprite = f'brique{type_brique}_{niveau}_{couleur}'
+            sprites[nom_sprite] = ('bricks', x, y_base, largeur, hauteur)
 
 # Dictionnaire pour stocker les différentes sprite sheets
 sprite_sheets = {
@@ -178,21 +220,30 @@ class Raquette:
 class Brique:
     """Classe représentant une brique destructible."""
     
-    def __init__(self, x, y, couleur='grise'):
+    def __init__(self, x, y, type_brique='standard', couleur=None):
         """
         Initialise une nouvelle brique.
         
         Args:
             x (int): Position x du centre de la brique
             y (int): Position y du centre de la brique
-            couleur (str, optional): Couleur de la brique. Par défaut 'grise'.
+            type_brique (str): Type de brique ('standard', 'moyenne', 'petite')
+            couleur (str, optional): Couleur de la brique. Si None, une couleur aléatoire est choisie.
         """
         self.x = x  # abscisse du centre de la brique
         self.y = y  # ordonnée du centre de la brique
-        self.vie = 1
-        self.couleur = couleur
-        self.sprite = sprite_images[f'brique_{couleur}']
-        self.width, self.height = self.sprite.get_size()
+        self.type_brique = type_brique
+        
+        # Récupérer les propriétés du type de brique
+        self.largeur, self.hauteur, self.vie_max, _ = TYPES_BRIQUES[type_brique]
+        self.vie = self.vie_max  # Chaque brique commence avec son nombre maximal de vies
+        
+        # Si aucune couleur n'est spécifiée, en choisir une aléatoirement
+        self.couleur = couleur if couleur else random.choice(COULEURS_DISPONIBLES)
+        
+        # Dimensions de la brique
+        self.width = self.largeur
+        self.height = self.hauteur
 
     def en_vie(self):
         """
@@ -204,9 +255,13 @@ class Brique:
         return self.vie > 0
 
     def afficher(self):
-        """Affiche la brique si elle est encore en vie."""
+        """Affiche la brique avec le sprite correspondant au niveau de vie actuel."""
         if self.en_vie():
-            screen.blit(self.sprite, (self.x - self.width/2, self.y - self.height/2))
+            # Sélectionne le sprite selon le type, le niveau de vie et la couleur
+            sprite_name = f'brique{self.type_brique}_{self.vie}_{self.couleur}'
+            if sprite_name in sprite_images:
+                sprite = sprite_images[sprite_name]
+                screen.blit(sprite, (self.x - self.width/2, self.y - self.height/2))
 
     def collision_balle(self, balle):
         """
