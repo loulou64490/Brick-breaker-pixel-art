@@ -16,6 +16,8 @@ from src.sons import jouer_son_bonus, jouer_son_rebond, jouer_son_explosion
 from src.gestion_briques import generer_briques, creer_brique
 from src.gestion_niveaux import charger_niveau, initialiser_niveau
 from src.gestion_affichage import afficher_vies
+from src.ecrans import charger_police, creer_overlay
+from src.boutons import Bouton
 
 class Jeu:
     """Classe principale qui gère le déroulement du jeu."""
@@ -30,6 +32,9 @@ class Jeu:
         self.partie_terminee = False  # État de la partie
         self.niveau = 1  # Niveau de départ
         self.victoire_totale = False  # Indique si tous les niveaux sont terminés
+        self.en_pause = False  # État de pause du jeu
+        self.retour_menu = False  # Indique si le joueur veut retourner au menu principal
+        self.polices = charger_police()  # Charger les polices personnalisées
         
         # Chargement des paramètres du niveau actuel
         self.charger_niveau(self.niveau)
@@ -74,8 +79,12 @@ class Jeu:
                 return True  # Signale qu'il faut quitter le jeu
                 
             elif event.type == pygame.KEYDOWN:
-                # Touche espace pour lancer les balles sur la raquette
-                if event.key == pygame.K_SPACE:
+                # Touche pour mettre en pause (P ou Échap)
+                if event.key == pygame.K_p or event.key == pygame.K_ESCAPE:
+                    self.en_pause = not self.en_pause
+                
+                # Touche espace pour lancer les balles sur la raquette (si pas en pause)
+                elif event.key == pygame.K_SPACE and not self.en_pause:
                     if not self.partie_terminee and all(balle.sur_raquette for balle in self.balles):
                         # Lancer les balles qui sont sur la raquette
                         for balle in self.balles:
@@ -85,7 +94,14 @@ class Jeu:
                     
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Clic gauche
-                    if all(balle.sur_raquette for balle in self.balles) and not self.partie_terminee:
+                    if self.en_pause:
+                        # Vérifier si le bouton "Menu principal" est cliqué en pause
+                        pos = pygame.mouse.get_pos()
+                        if hasattr(self, 'bouton_menu_principal') and self.bouton_menu_principal.est_clique(pos):
+                            self.retour_menu = True
+                            self.partie_terminee = True
+                            self.en_pause = False
+                    elif all(balle.sur_raquette for balle in self.balles) and not self.partie_terminee:
                         # Lancer toutes les balles qui sont sur la raquette
                         for balle in self.balles:
                             if balle.sur_raquette:
@@ -96,8 +112,8 @@ class Jeu:
 
     def mise_a_jour(self):
         """Met à jour l'état du jeu: position des objets, collisions, etc."""
-        # Si la partie est terminée, ne rien mettre à jour
-        if self.partie_terminee:
+        # Si la partie est terminée ou en pause, ne rien mettre à jour
+        if self.partie_terminee or self.en_pause:
             return
             
         # Récupérer la position horizontale de la souris
@@ -210,4 +226,28 @@ class Jeu:
             balle.afficher()
                 
         # Affichage des vies (utiliser la fonction du module gestion_affichage)
-        afficher_vies(self.vies, XMAX) 
+        afficher_vies(self.vies, XMAX)
+        
+        # Afficher l'écran de pause si le jeu est en pause
+        if self.en_pause:
+            self.afficher_ecran_pause()
+    
+    def afficher_ecran_pause(self):
+        """Affiche l'écran de pause avec les options"""
+        # Créer un overlay semi-transparent
+        overlay = creer_overlay((0, 0, 0), 150)
+        screen.blit(overlay, (0, 0))
+        
+        # Afficher le titre "PAUSE"
+        titre_texte = self.polices['titre'].render("PAUSE", True, (255, 255, 255))
+        titre_rect = titre_texte.get_rect(center=(XMAX // 2, YMAX // 2 - 50))
+        screen.blit(titre_texte, titre_rect)
+        
+        # Créer le bouton "Menu principal"
+        self.bouton_menu_principal = Bouton(XMAX/2, YMAX/2 + 30, 145, 25, "Menu principal", self.polices['bouton'])
+        
+        # Mettre à jour l'état du bouton
+        self.bouton_menu_principal.verifier_survol(pygame.mouse.get_pos())
+        
+        # Dessiner le bouton
+        self.bouton_menu_principal.dessiner()

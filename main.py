@@ -47,10 +47,10 @@ def main():
                 pygame.quit()
                 sys.exit()
             
-            # Mise à jour de l'état du jeu
+            # Mise à jour de l'état du jeu (ne fait rien si en pause)
             jeu.mise_a_jour()
             
-            # Affichage
+            # Affichage (inclut maintenant l'écran de pause si nécessaire)
             jeu.affichage()
             
             # Rafraîchissement de l'écran
@@ -61,8 +61,11 @@ def main():
             
             # Vérifier si la partie est terminée
             if jeu.partie_terminee:
+                # Si le joueur veut retourner au menu (depuis le menu pause)
+                if jeu.retour_menu:
+                    partie_en_cours = False
                 # Afficher les écrans de fin appropriés
-                if jeu.vies <= 0:
+                elif jeu.vies <= 0:
                     # Game over
                     retour_menu = afficher_ecran_game_over(jeu.background_image)
                     partie_en_cours = False
@@ -72,7 +75,7 @@ def main():
                     partie_en_cours = False
                 
                 # Si l'utilisateur a fermé la fenêtre pendant l'écran de fin
-                if not retour_menu:
+                if not partie_en_cours and not jeu.retour_menu and not retour_menu:
                     pygame.quit()
                     sys.exit()
 
