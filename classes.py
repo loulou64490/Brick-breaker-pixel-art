@@ -39,11 +39,29 @@ TYPES_BRIQUES = {
     })
 }
 
+# Types de bonus disponibles avec leurs positions dans le sprite sheet
+TYPES_BONUS = {
+    'vie_plus': ('sprites', 112, 59, 8, 8),     # Bonus de vie supplémentaire
+    'balle_plus': ('sprites', 112, 27, 8, 8),   # Bonus de nouvelle balle
+    'multi_balles': ('sprites', 112, 43, 8, 8), # Bonus multiplication des balles
+    'raquette_large': ('sprites', 112, 91, 8, 8) # Bonus raquette élargie
+}
+
 # Dictionnaire contenant les positions et tailles des sprites dans les sprite sheets
 sprites = {
     'balle': ('sprites', 144, 8, 8, 8),
     'raquette': ('sprites', 64, 7, 32, 9),
+    'raquette_gauche': ('raquette', 96, 7, 4, 9),
+    'raquette_milieu': ('raquette', 112, 7, 3, 9),
+    'raquette_droite': ('raquette', 128, 7, 4, 9),
+    'vie3': ('hearts', 115, 3, 11, 10),  # Ajout du sprite pour les vies
+    'vie2': ('hearts', 82, 3, 11, 10),  # Ajout du sprite pour les vies
+    'vie1': ('hearts', 34, 3, 11, 10),  # Ajout du sprite pour les vies
 }
+
+# Ajouter les bonus au dictionnaire de sprites
+for nom_bonus, (sheet_name, x, y, width, height) in TYPES_BONUS.items():
+    sprites[nom_bonus] = (sheet_name, x, y, width, height)
 
 # Génération automatique des sprites pour tous les types de briques
 for type_brique, (largeur, hauteur, nb_vies, positions) in TYPES_BRIQUES.items():
@@ -61,6 +79,7 @@ sprite_sheets = {
     'sprites': pygame.image.load('assets/paddles_and_balls.png').convert_alpha(),
     'hearts': pygame.image.load('assets/hearts.png').convert_alpha(),
     'bricks': pygame.image.load('assets/bricks.png').convert_alpha(),
+    'raquette': pygame.image.load('assets/paddle_part.png').convert_alpha(),
 }
 
 # Fonction pour extraire un sprite de la sprite sheet
@@ -84,23 +103,82 @@ def get_sprite(name):
 # Précharger les images des sprites
 sprite_images = {name: get_sprite(name) for name in sprites}
 
+class Bonus:
+    """Classe représentant un bonus qui tombe d'une brique détruite."""
+    
+    def __init__(self, x, y):
+        """
+        Initialise un nouveau bonus à la position spécifiée.
+        
+        Args:
+            x (int): Position x initiale
+            y (int): Position y initiale
+        """
+        # Choisir un type de bonus au hasard
+        self.type = random.choice(list(TYPES_BONUS.keys()))
+        self.sprite = sprite_images[self.type]
+        self.width, self.height = self.sprite.get_size()
+        self.x = x
+        self.y = y
+        self.vitesse = 1  # Vitesse de chute
+        self.actif = True  # Le bonus est actif tant qu'il n'est pas ramassé ou perdu
+        
+    def deplacer(self):
+        """Fait tomber le bonus vers le bas de l'écran."""
+        self.y += self.vitesse
+        # Désactiver le bonus s'il sort de l'écran
+        if self.y > YMAX + self.height:
+            self.actif = False
+            
+    def collision_raquette(self, raquette):
+        """
+        Vérifie si le bonus entre en collision avec la raquette.
+        
+        Args:
+            raquette (Raquette): La raquette à tester
+            
+        Returns:
+            bool: True s'il y a collision, False sinon
+        """
+        horizontal = abs(self.x - raquette.x) < (self.width/2 + raquette.width/2)
+        vertical = abs(self.y - raquette.y) < (self.height/2 + raquette.height/2)
+        return horizontal and vertical
+            
+    def afficher(self):
+        """Affiche le bonus à sa position actuelle."""
+        if self.actif:
+            screen.blit(self.sprite, (self.x - self.width/2, self.y - self.height/2))
+
 class Balle:
     """Classe représentant la balle du jeu."""
     
-    def __init__(self):
-        """Initialise une nouvelle balle."""
-        self.x, self.y = 400, 400
-        self.vx, self.vy = None, None
-        self.vitesse = 2
-        self.sur_raquette = True
+    def __init__(self, x=None, y=None, vx=None, vy=None):
+        """
+        Initialise une nouvelle balle.
+        
+        Args:
+            x (int, optional): Position x initiale. Si None, position par défaut.
+            y (int, optional): Position y initiale. Si None, position par défaut.
+            vx (float, optional): Vitesse x initiale. Si None, la balle est sur la raquette.
+            vy (float, optional): Vitesse y initiale. Si None, la balle est sur la raquette.
+        """
+        self.x = x if x is not None else 400
+        self.y = y if y is not None else 400
+        self.vx = vx
+        self.vy = vy
+        self.vitesse = 3
+        self.sur_raquette = vx is None or vy is None  # Si pas de vitesse spécifiée, la balle est sur la raquette
         self.sprite = sprite_images['balle']
         
         # Définir la taille exacte en fonction du sprite
         self.width, self.height = self.sprite.get_size()
         self.rayon = self.width / 2  # Pour les calculs de collision circulaire
         
-        # Initialiser la vitesse avec un angle par défaut
-        self.vitesse_par_angle(60)
+        # Initialiser la vitesse avec un angle par défaut si la balle n'est pas sur la raquette
+        if not self.sur_raquette:
+            self.vitesse = math.sqrt(vx**2 + vy**2)  # Garder la même norme de vitesse
+        else:
+            self.vitesse_par_angle(60)
 
     def vitesse_par_angle(self, angle):
         """
@@ -140,7 +218,11 @@ class Balle:
         
         Args:
             raquette (Raquette): La raquette du joueur
+        Returns:
+            bool: True si la balle est perdue, False sinon
         """
+        perdue = False
+        
         if self.sur_raquette:
             # On met la balle sur la raquette
             self.y = raquette.y - self.height/2 - raquette.height/2
@@ -166,10 +248,13 @@ class Balle:
             
             if self.y + self.height/2 > YMAX:
                 self.sur_raquette = True
+                perdue = True  # Indique que la balle est perdue
             
             if self.y - self.height/2 < YMIN:
                 self.vy = -self.vy
                 self.y = YMIN + self.height/2  # Éviter que la balle sorte de l'écran
+                
+        return perdue
 
 
 class Raquette:
@@ -177,15 +262,71 @@ class Raquette:
     
     def __init__(self):
         """Initialise une nouvelle raquette."""
-        self.sprite = sprite_images['raquette']
-        self.width, self.height = self.sprite.get_size()
-        # Positionner correctement avec la hauteur du sprite
+        # Utilisation des sprites individuels
+        self.sprite_gauche = sprite_images['raquette_gauche']
+        self.sprite_milieu = sprite_images['raquette_milieu']
+        self.sprite_droite = sprite_images['raquette_droite']
+        
+        # Dimensions des parties constituantes
+        self.larg_gauche = self.sprite_gauche.get_width()
+        self.larg_milieu = self.sprite_milieu.get_width()
+        self.larg_droite = self.sprite_droite.get_width()
+        self.height = self.sprite_milieu.get_height()  # La hauteur est la même pour tous
+        
+        # Par défaut - raquette normale avec 8 sections milieu
+        self.nb_sections_milieu = 8
+        self.elargie = False
+        
+        # Calcul de la largeur totale
+        self.width = self.larg_gauche + (self.nb_sections_milieu * self.larg_milieu) + self.larg_droite
+        
+        # Position
         self.x = XMAX / 2
         self.y = YMAX - self.height/2
+        
+        # Temps d'élargissement
+        self.temps_elargie = 0
 
     def afficher(self):
-        """Affiche la raquette à sa position actuelle."""
-        screen.blit(self.sprite, (self.x - self.width/2, self.y - self.height/2))
+        """Affiche la raquette composée de plusieurs sprites."""
+        # Position de début (partie gauche)
+        x_debut = self.x - self.width/2
+        y_pos = self.y - self.height/2
+        
+        # Afficher la partie gauche
+        screen.blit(self.sprite_gauche, (x_debut, y_pos))
+        x_courant = x_debut + self.larg_gauche
+        
+        # Afficher les sections du milieu
+        for i in range(self.nb_sections_milieu):
+            screen.blit(self.sprite_milieu, (x_courant, y_pos))
+            x_courant += self.larg_milieu
+            
+        # Afficher la partie droite
+        screen.blit(self.sprite_droite, (x_courant, y_pos))
+    
+    def elargir(self):
+        """Élargit temporairement la raquette en augmentant le nombre de sections milieu."""
+        if not self.elargie:
+            # Agrandir la raquette en ajoutant des sections au milieu
+            self.nb_sections_milieu = 14  # Augmenter le nombre de sections du milieu
+            
+            # Recalculer la largeur totale
+            self.width = self.larg_gauche + (self.nb_sections_milieu * self.larg_milieu) + self.larg_droite
+            
+            self.elargie = True
+            self.temps_elargie = 600  # 10 secondes à 60 FPS
+    
+    def mise_a_jour(self):
+        """Met à jour l'état de la raquette (bonus temporaires)."""
+        if self.elargie:
+            self.temps_elargie -= 1
+            if self.temps_elargie <= 0:
+                # Revenir à la taille normale
+                self.nb_sections_milieu = 8
+                # Recalculer la largeur totale
+                self.width = self.larg_gauche + (self.nb_sections_milieu * self.larg_milieu) + self.larg_droite
+                self.elargie = False
 
     def deplacer(self, x):
         """
@@ -239,11 +380,14 @@ class Brique:
         self.vie = self.vie_max  # Chaque brique commence avec son nombre maximal de vies
         
         # Si aucune couleur n'est spécifiée, en choisir une aléatoirement
-        self.couleur = couleur if couleur else random.choice(COULEURS_DISPONIBLES)
+        self.couleur = couleur #si couleur else random.choice(COULEURS_DISPONIBLES)
         
         # Dimensions de la brique
         self.width = self.largeur
         self.height = self.hauteur
+
+        # Probabilité de générer un bonus quand la brique est détruite (en pourcentage)
+        self.chance_bonus = 30  # 30% de chance
 
     def en_vie(self):
         """
@@ -272,11 +416,11 @@ class Brique:
             balle (Balle): La balle à tester
             
         Returns:
-            bool: True s'il y a eu collision, False sinon
+            tuple: (bool, bool, int, int) - collision, bonus généré, position x du bonus, position y du bonus
         """
         # Pas de collision si la brique est déjà détruite
         if not self.en_vie():
-            return False
+            return False, False, 0, 0
         
         # Vérifier la collision avec la balle en utilisant les dimensions exactes des sprites
         horizontal = abs(self.x - balle.x) < (self.width / 2 + balle.width / 2)
@@ -301,6 +445,12 @@ class Brique:
             
             # Réduire la vie de la brique
             self.vie -= 1
-            return True
+            
+            # Vérifier si la brique est détruite et déterminer si un bonus est généré
+            bonus_genere = False
+            if not self.en_vie() and random.randint(1, 100) <= self.chance_bonus:
+                bonus_genere = True
+            
+            return True, bonus_genere, self.x, self.y
         
-        return False
+        return False, False, 0, 0
