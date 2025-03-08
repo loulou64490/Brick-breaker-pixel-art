@@ -10,6 +10,7 @@ from src.brique import Brique
 from src.bonus import Bonus
 from src.niveaux import NIVEAUX, NOMBRE_MAX_NIVEAUX
 from src.sprites import TYPES_BRIQUES, sprite_images
+from src.sons import jouer_son_bonus, jouer_son_rebond, jouer_son_explosion
 
 # Importation des modules créés pour la refactorisation
 from src.gestion_briques import generer_briques, creer_brique
@@ -96,7 +97,7 @@ class Jeu:
                         for balle in self.balles:
                             if balle.sur_raquette:
                                 balle.sur_raquette = False
-                                balle.vitesse_par_angle(60)
+                                balle.vitesse_par_angle(random.randint(30, 120))
                     
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Clic gauche
@@ -105,7 +106,7 @@ class Jeu:
                         for balle in self.balles:
                             if balle.sur_raquette:
                                 balle.sur_raquette = False
-                                balle.vitesse_par_angle(60)
+                                balle.vitesse_par_angle(90)
         
         return False  # Ne pas quitter le jeu
 
@@ -146,6 +147,14 @@ class Jeu:
                 if brique.en_vie():
                     collision, bonus_genere, bonus_x, bonus_y = brique.collision_balle(balle)
                     
+                    # Si collision, jouer le son de rebond
+                    if collision:
+                        jouer_son_rebond()
+                        
+                        # Si la brique est détruite, jouer le son d'explosion
+                        if not brique.en_vie():
+                            jouer_son_explosion()
+                    
                     # Si un bonus est généré, l'ajouter à la liste des bonus actifs
                     if bonus_genere:
                         self.liste_bonus.append(Bonus(bonus_x, bonus_y))
@@ -162,6 +171,9 @@ class Jeu:
             
             # Vérifier si le bonus est ramassé par la raquette
             if bonus.collision_raquette(self.raquette):
+                # Jouer le son du bonus
+                jouer_son_bonus()
+                
                 # Utiliser la fonction du module gestion_bonus
                 self.vies, self.balles = appliquer_bonus(bonus, self.vies, self.balles, self.raquette)
                 bonus_a_supprimer.append(i)

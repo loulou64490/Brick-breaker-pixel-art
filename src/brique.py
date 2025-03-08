@@ -5,6 +5,7 @@ import random
 import pygame
 from src.constantes import screen
 from src.sprites import TYPES_BRIQUES, sprite_images
+from src.sons import jouer_son_explosion, jouer_son_rebond
 
 class Brique:
     """Classe représentant une brique destructible."""
@@ -92,7 +93,12 @@ class Brique:
                 balle.vy = -balle.vy
             
             # Réduire la vie de la brique
+            vie_avant = self.vie
             self.vie -= 1
+            
+            # Vérifier si la brique est détruite et jouer le son d'explosion
+            if vie_avant > 0 and self.vie <= 0:
+                jouer_son_explosion()
             
             # Vérifier si la brique est détruite et déterminer si un bonus est généré
             bonus_genere = False

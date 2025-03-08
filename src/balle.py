@@ -5,6 +5,7 @@ import math
 import pygame
 from src.constantes import screen, XMAX, XMIN, YMAX, YMIN
 from src.sprites import sprite_images
+from src.sons import jouer_son_rebond
 
 class Balle:
     """Classe représentant la balle du jeu."""
@@ -68,6 +69,9 @@ class Balle:
         # Formule où l'angle est proportionnel à l'écart au centre de la raquette
         angle = 90 + 80 * diff / longueur_totale
         self.vitesse_par_angle(angle)
+        
+        # Jouer le son de rebond
+        jouer_son_rebond()
 
     def deplacer(self, raquette):
         """
@@ -98,10 +102,12 @@ class Balle:
             if self.x + self.width/2 > XMAX:
                 self.vx = -self.vx
                 self.x = XMAX - self.width/2  # Éviter que la balle sorte de l'écran
+                jouer_son_rebond()  # Jouer le son de rebond
             
             if self.x - self.width/2 < XMIN:
                 self.vx = -self.vx
                 self.x = XMIN + self.width/2  # Éviter que la balle sorte de l'écran
+                jouer_son_rebond()  # Jouer le son de rebond
             
             if self.y + self.height/2 > YMAX:
                 self.sur_raquette = True
@@ -110,5 +116,6 @@ class Balle:
             if self.y - self.height/2 < YMIN:
                 self.vy = -self.vy
                 self.y = YMIN + self.height/2  # Éviter que la balle sorte de l'écran
+                jouer_son_rebond()  # Jouer le son de rebond
                 
         return perdue 

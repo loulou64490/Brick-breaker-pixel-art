@@ -9,7 +9,14 @@ from src.jeu import Jeu
 
 # Initialisation de Pygame
 pygame.init()
+# Initialisation du module audio
+pygame.mixer.init()
 pygame.display.set_caption("Brick Breaker pixel art")
+
+# Chargement et démarrage de la musique
+pygame.mixer.music.load('assets/sound/music.mp3')
+pygame.mixer.music.set_volume(0.5)  # Volume à 50%
+pygame.mixer.music.play(-1)  # -1 pour jouer en boucle infinie
 
 # Initialisation de l'horloge pour limiter les FPS
 clock = pygame.time.Clock()
