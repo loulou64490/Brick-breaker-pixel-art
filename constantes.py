@@ -1,2 +1,0 @@
-XMIN, YMIN = 0, 0
-XMAX, YMAX = 240, 160
