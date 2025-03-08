@@ -15,8 +15,7 @@ from src.sons import jouer_son_bonus, jouer_son_rebond, jouer_son_explosion
 # Importation des modules créés pour la refactorisation
 from src.gestion_briques import generer_briques, creer_brique
 from src.gestion_niveaux import charger_niveau, initialiser_niveau
-from src.gestion_bonus import appliquer_bonus
-from src.gestion_affichage import afficher_vies, afficher_fin_partie
+from src.gestion_affichage import afficher_vies
 
 class Jeu:
     """Classe principale qui gère le déroulement du jeu."""
@@ -68,15 +67,6 @@ class Jeu:
             self.balles = balles
             self.raquette = raquette
 
-    def generer_briques(self):
-        """
-        Génère les briques en les disposant de manière aléatoire selon différents patterns.
-        Utilise uniquement les couleurs définies pour le niveau actuel.
-        """
-        # Utiliser la fonction de gestion_briques
-        self.liste_briques = []
-        generer_briques(self.couleurs_niveau, self.liste_briques, XMAX, TYPES_BRIQUES)
-
     def gestion_evenements(self):
         """Gère les événements utilisateur comme les clics et la fermeture du jeu."""
         for event in pygame.event.get():
@@ -84,15 +74,9 @@ class Jeu:
                 return True  # Signale qu'il faut quitter le jeu
                 
             elif event.type == pygame.KEYDOWN:
-                # Touche espace pour recommencer après fin de partie ou passer au niveau suivant
+                # Touche espace pour lancer les balles sur la raquette
                 if event.key == pygame.K_SPACE:
-                    if self.partie_terminee and self.victoire_totale:
-                        # Recommencer le jeu depuis le début
-                        self.__init__()
-                    elif self.partie_terminee:
-                        # Recommencer le niveau actuel
-                        self.__init__()
-                    elif all(balle.sur_raquette for balle in self.balles):
+                    if not self.partie_terminee and all(balle.sur_raquette for balle in self.balles):
                         # Lancer les balles qui sont sur la raquette
                         for balle in self.balles:
                             if balle.sur_raquette:
@@ -174,8 +158,8 @@ class Jeu:
                 # Jouer le son du bonus
                 jouer_son_bonus()
                 
-                # Utiliser la fonction du module gestion_bonus
-                self.vies, self.balles = appliquer_bonus(bonus, self.vies, self.balles, self.raquette)
+                # Appliquer le bonus directement avec sa méthode
+                self.vies, self.balles = bonus.appliquer(self.vies, self.balles, self.raquette)
                 bonus_a_supprimer.append(i)
                 
             # Supprimer les bonus inactifs
@@ -226,7 +210,4 @@ class Jeu:
             balle.afficher()
                 
         # Affichage des vies (utiliser la fonction du module gestion_affichage)
-        afficher_vies(self.vies, XMAX)
-        
-        # Affichage de l'écran de fin si la partie est terminée (utiliser la fonction du module gestion_affichage)
-        afficher_fin_partie(self.partie_terminee, self.vies, self.victoire_totale) 
+        afficher_vies(self.vies, XMAX) 

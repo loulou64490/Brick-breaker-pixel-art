@@ -56,33 +56,4 @@ def afficher_vies(vies, XMAX):
         else:  # vies_restantes == 1
             # Utiliser un coeur de 1 vie
             screen.blit(sprite_images['vie1'], (x, y))
-            vies_restantes -= 1
-
-def afficher_fin_partie(partie_terminee, vies, victoire_totale):
-    """
-    Affiche un indicateur visuel de fin de partie sans texte.
-    
-    Args:
-        partie_terminee (bool): Si la partie est terminée
-        vies (int): Nombre de vies restantes
-        victoire_totale (bool): Si tous les niveaux sont terminés
-    """
-    if not partie_terminee:
-        return
-        
-    # Créer une surface semi-transparente
-    overlay = pygame.Surface((XMAX, YMAX), pygame.SRCALPHA)
-    
-    # Choisir la couleur en fonction de la situation
-    if vies <= 0:
-        # Rouge pour défaite
-        overlay.fill((255, 50, 50, 128))
-    elif victoire_totale:
-        # Or pour victoire totale
-        overlay.fill((255, 215, 0, 128))
-    else:
-        # Vert pour niveau terminé
-        overlay.fill((50, 255, 50, 128))
-    
-    # Afficher l'overlay
-    screen.blit(overlay, (0, 0)) 
+            vies_restantes -= 1 

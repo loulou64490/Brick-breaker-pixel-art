@@ -39,7 +39,6 @@ TYPES_BRIQUES = {
 
 # Types de bonus disponibles avec leurs positions dans le sprite sheet
 TYPES_BONUS = {
-    'vie_plus': ('sprites', 112, 59, 8, 8),     # Bonus de vie supplémentaire
     'balle_plus': ('sprites', 112, 27, 8, 8),   # Bonus de nouvelle balle
     'multi_balles': ('sprites', 112, 43, 8, 8), # Bonus multiplication des balles
     'raquette_large': ('sprites', 112, 91, 8, 8) # Bonus raquette élargie
