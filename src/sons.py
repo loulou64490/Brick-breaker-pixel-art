@@ -19,11 +19,15 @@ MUSIQUES = {
 son_bonus = pygame.mixer.Sound('assets/sound/bonus2.wav')
 son_rebond = pygame.mixer.Sound('assets/sound/bounce.wav')
 son_explosion = pygame.mixer.Sound('assets/sound/explosion.wav')
+son_win = pygame.mixer.Sound('assets/sound/win.wav')
+son_lose = pygame.mixer.Sound('assets/sound/lose.wav')
 
 # Réglage du volume des effets sonores (valeurs entre 0.0 et 1.0)
 son_bonus.set_volume(0.7)
 son_rebond.set_volume(0.5)
 son_explosion.set_volume(0.6)
+son_win.set_volume(0.8)
+son_lose.set_volume(0.8)
 
 def jouer_musique(nom_musique):
     """Joue une musique spécifique
@@ -74,4 +78,12 @@ def jouer_son_rebond():
 
 def jouer_son_explosion():
     """Joue le son lorsqu'une brique se casse"""
-    son_explosion.play() 
+    son_explosion.play()
+
+def jouer_son_win():
+    """Joue le son lorsqu'un niveau est terminé"""
+    son_win.play()
+
+def jouer_son_lose():
+    """Joue le son lorsqu'une vie est perdue"""
+    son_lose.play() 

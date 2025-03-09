@@ -2,6 +2,7 @@
 Module pour gérer l'écran de démarrage du jeu
 """
 import pygame
+import sys
 from src.constantes import screen, XMAX, YMAX
 from src.boutons import Bouton
 from src.sons import jouer_musique_demarrage
@@ -22,7 +23,10 @@ def afficher_ecran_demarrage():
     polices, render_options = charger_police(tailles=tailles)
     
     # Créer le bouton de démarrage
-    bouton = Bouton(XMAX/2, YMAX/2 + 30, 50, 18, "Jouer", polices['bouton'])
+    bouton_jouer = Bouton(XMAX/2, YMAX/2 + 30, 45, 18, "Jouer", polices['bouton'])
+    
+    # Créer le bouton Quitter
+    bouton_quitter = Bouton(XMAX/2, YMAX/2 + 60, 55, 18, "Quitter", polices['bouton'])
     
     # Titre du jeu - utiliser render_pixel_text pour un rendu pixel perfect
     titre_surface_1 = render_pixel_text(
@@ -53,11 +57,16 @@ def afficher_ecran_demarrage():
             
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Clic gauche
-                    if bouton.est_clique(event.pos):
+                    if bouton_jouer.est_clique(event.pos):
                         return True  # Commencer le jeu
+                    elif bouton_quitter.est_clique(event.pos):
+                        pygame.quit()
+                        sys.exit()
         
-        # Mettre à jour l'état du bouton
-        bouton.verifier_survol(pygame.mouse.get_pos())
+        # Mettre à jour l'état des boutons
+        pos_souris = pygame.mouse.get_pos()
+        bouton_jouer.verifier_survol(pos_souris)
+        bouton_quitter.verifier_survol(pos_souris)
         
         # Effacer l'écran
         screen.fill((0, 0, 0))
@@ -70,8 +79,9 @@ def afficher_ecran_demarrage():
         screen.blit(titre_surface_1, titre_rect_1)
         screen.blit(titre_surface_2, titre_rect_2)
         
-        # Dessiner le bouton
-        bouton.dessiner()
+        # Dessiner les boutons
+        bouton_jouer.dessiner()
+        bouton_quitter.dessiner()
         
         # Rafraîchir l'écran
         pygame.display.flip()

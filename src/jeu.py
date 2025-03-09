@@ -10,7 +10,7 @@ from src.brique import Brique
 from src.bonus import Bonus
 from src.niveaux import NIVEAUX, NOMBRE_MAX_NIVEAUX
 from src.sprites import TYPES_BRIQUES, sprite_images
-from src.sons import jouer_son_bonus, jouer_son_rebond, jouer_son_explosion
+from src.sons import jouer_son_bonus, jouer_son_rebond, jouer_son_explosion, jouer_son_win, jouer_son_lose
 
 # Importation des modules créés pour la refactorisation
 from src.gestion_briques import generer_briques, creer_brique
@@ -153,6 +153,9 @@ class Jeu:
                     self.vies -= 1
                     if self.vies <= 0:
                         self.partie_terminee = True
+                    else:
+                        # Jouer le son de perte de vie
+                        jouer_son_lose()
             
             # Vérifier les collisions avec les briques
             for brique in self.liste_briques:
@@ -202,6 +205,9 @@ class Jeu:
         # Vérifier si toutes les briques sont détruites (victoire de niveau)
         briques_restantes = sum(1 for brique in self.liste_briques if brique.en_vie())
         if briques_restantes == 0:
+            # Jouer le son de victoire du niveau
+            jouer_son_win()
+            
             # Passer au niveau suivant
             self.niveau += 1
             
