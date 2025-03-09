@@ -16,7 +16,7 @@ from src.sons import jouer_son_bonus, jouer_son_rebond, jouer_son_explosion
 from src.gestion_briques import generer_briques, creer_brique
 from src.gestion_niveaux import charger_niveau, initialiser_niveau
 from src.gestion_affichage import afficher_vies
-from src.ecrans import charger_police, creer_overlay
+from src.ecrans import charger_police, creer_overlay, render_pixel_text
 from src.boutons import Bouton
 
 class Jeu:
@@ -34,7 +34,9 @@ class Jeu:
         self.victoire_totale = False  # Indique si tous les niveaux sont terminés
         self.en_pause = False  # État de pause du jeu
         self.retour_menu = False  # Indique si le joueur veut retourner au menu principal
-        self.polices = charger_police()  # Charger les polices personnalisées
+        
+        # Charger les polices personnalisées avec les options de rendu pixel perfect
+        self.polices, self.render_options = charger_police()
         
         # Chargement des paramètres du niveau actuel
         self.charger_niveau(self.niveau)
@@ -250,13 +252,18 @@ class Jeu:
         overlay = creer_overlay((0, 0, 0), 150)
         screen.blit(overlay, (0, 0))
         
-        # Afficher le titre "PAUSE"
-        titre_texte = self.polices['titre'].render("PAUSE", True, (255, 255, 255))
+        # Afficher le titre "PAUSE" en utilisant render_pixel_text pour un rendu pixel perfect
+        titre_texte = render_pixel_text(
+            self.polices['titre'], 
+            "PAUSE", 
+            (255, 255, 255),
+            self.render_options['titre']
+        )
         titre_rect = titre_texte.get_rect(center=(XMAX // 2, YMAX // 2 - 50))
         screen.blit(titre_texte, titre_rect)
         
         # Créer le bouton "Menu principal"
-        self.bouton_menu_principal = Bouton(XMAX/2, YMAX/2 + 30, 145, 25, "Menu principal", self.polices['bouton'])
+        self.bouton_menu_principal = Bouton(XMAX/2, YMAX/2 + 30, 105, 18, "Menu principal", self.polices['bouton'])
         
         # Mettre à jour l'état du bouton
         self.bouton_menu_principal.verifier_survol(pygame.mouse.get_pos())

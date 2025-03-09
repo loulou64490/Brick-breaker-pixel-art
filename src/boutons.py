@@ -2,7 +2,8 @@
 Module pour gérer les boutons d'interface utilisateur
 """
 import pygame
-from src.constantes import screen
+from src.constantes import screen, BOUTON_PIXEL_PERFECT
+from src.ecrans import render_pixel_text
 
 class Bouton:
     """Classe générique représentant un bouton dans l'interface utilisateur"""
@@ -40,8 +41,12 @@ class Bouton:
         # Dessiner la bordure
         pygame.draw.rect(screen, self.couleur_bordure, self.rect, width=2, border_radius=8)
         
-        # Dessiner le texte
-        texte_surface = self.police.render(self.texte, True, (255, 255, 255))
+        # Dessiner le texte avec le mode pixel perfect si activé
+        if BOUTON_PIXEL_PERFECT:
+            texte_surface = render_pixel_text(self.police, self.texte, (255, 255, 255))
+        else:
+            texte_surface = self.police.render(self.texte, True, (255, 255, 255))
+            
         texte_rect = texte_surface.get_rect(center=self.rect.center)
         screen.blit(texte_surface, texte_rect)
     

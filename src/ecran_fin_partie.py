@@ -5,24 +5,20 @@ import pygame
 from src.constantes import screen, XMAX, YMAX
 from src.boutons import Bouton
 from src.sons import jouer_musique_game_over, jouer_musique_victoire
-from src.ecrans import charger_police, charger_fond, creer_overlay
+from src.ecrans import charger_police, charger_fond, creer_overlay, render_pixel_text
 
 # Dictionnaire décrivant les différents types d'écrans de fin de partie
 CONFIGS_ECRANS = {
     "game_over": {
         "titre": "GAME OVER",
         "couleur_titre": (255, 50, 50),  # Rouge
-        "sous_titre": "",
-        "couleur_sous_titre": (246, 215, 189),
         "couleur_overlay": (255, 50, 50),  # Rouge
         "image_fond": 'assets/background/1.png',
         "musique": jouer_musique_game_over
     },
     "victoire": {
-        "titre": "VICTOIRE !",
+        "titre": "VICTOIRE",
         "couleur_titre": (255, 215, 0),  # Doré
-        "sous_titre": "",
-        "couleur_sous_titre": (246, 215, 189),
         "couleur_overlay": (255, 215, 0),  # Doré
         "image_fond": 'assets/background/2.png',
         "musique": jouer_musique_victoire
@@ -52,25 +48,19 @@ def afficher_ecran_fin_partie(type_ecran="game_over", background_image=None):
         config["musique"]()
     
     # Chargement des polices
-    polices = charger_police()
+    polices, render_options = charger_police()
     
     # Créer le bouton pour revenir au menu
-    bouton = Bouton(XMAX/2, YMAX/2 + 30, 145, 25, "Menu principal", polices['bouton'])
+    bouton = Bouton(XMAX/2, YMAX/2 + 30, 105, 18, "Menu principal", polices['bouton'])
     
     # Titre et sous-titre
-    titre_surface = polices['titre'].render(config["titre"], True, config["couleur_titre"])
-    titre_rect = titre_surface.get_rect(center=(XMAX/2, YMAX/2 - 50))
-    
-    # Préparer le sous-titre si présent
-    sous_titre_surface = None
-    sous_titre_rect = None
-    if "sous_titre" in config:
-        sous_titre_surface = polices['sous_titre'].render(
-            config["sous_titre"], 
-            True, 
-            config.get("couleur_sous_titre", (246, 215, 189))
-        )
-        sous_titre_rect = sous_titre_surface.get_rect(center=(XMAX/2, YMAX/2))
+    titre_surface = render_pixel_text(
+        polices['titre'], 
+        config["titre"], 
+        config["couleur_titre"],
+        render_options['titre']
+    )
+    titre_rect = titre_surface.get_rect(center=(XMAX/2, YMAX/2 - 30))
     
     # Utiliser le fond fourni ou charger une image par défaut
     if background_image is None and "image_fond" in config:
@@ -112,10 +102,6 @@ def afficher_ecran_fin_partie(type_ecran="game_over", background_image=None):
         
         # Dessiner le titre
         screen.blit(titre_surface, titre_rect)
-        
-        # Dessiner le sous-titre si présent
-        if sous_titre_surface and sous_titre_rect:
-            screen.blit(sous_titre_surface, sous_titre_rect)
         
         # Dessiner le bouton
         bouton.dessiner()
