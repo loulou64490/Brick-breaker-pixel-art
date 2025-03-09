@@ -80,12 +80,18 @@ class Jeu:
         """Gère les événements utilisateur comme les clics et la fermeture du jeu."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                # Libérer la souris avant de quitter
+                pygame.mouse.set_visible(True)
+                pygame.event.set_grab(False)
                 return True  # Signale qu'il faut quitter le jeu
                 
             elif event.type == pygame.KEYDOWN:
                 # Touche pour mettre en pause (P ou Échap)
                 if event.key == pygame.K_p or event.key == pygame.K_ESCAPE:
                     self.en_pause = not self.en_pause
+                    # Afficher/cacher le curseur selon l'état de pause
+                    pygame.mouse.set_visible(self.en_pause)
+                    pygame.event.set_grab(not self.en_pause)
                 
                 # Touche espace pour lancer les balles sur la raquette (si pas en pause)
                 elif event.key == pygame.K_SPACE and not self.en_pause:
@@ -95,7 +101,7 @@ class Jeu:
                             if balle.sur_raquette:
                                 balle.sur_raquette = False
                                 balle.vitesse_par_angle(random.randint(30, 120))
-                    
+            
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Clic gauche
                     if self.en_pause:

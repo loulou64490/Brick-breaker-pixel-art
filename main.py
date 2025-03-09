@@ -14,7 +14,7 @@ from src.sons import jouer_musique_jeu
 pygame.init()
 # Initialisation du module audio
 pygame.mixer.init()
-pygame.display.set_caption("Brick Breaker pixel art")
+pygame.display.set_caption("Brick Breaker")
 
 # Initialisation de l'horloge pour limiter les FPS
 clock = pygame.time.Clock()
@@ -31,6 +31,10 @@ def main():
         if not commencer_jeu:
             pygame.quit()
             sys.exit()
+        
+        # Capturer la souris à l'intérieur de la fenêtre du jeu et cacher le curseur
+        pygame.mouse.set_visible(False)  # Cacher le curseur de la souris
+        pygame.event.set_grab(True)      # Confiner la souris à la fenêtre
         
         # Jouer la musique du jeu lorsqu'on commence une partie
         jouer_musique_jeu()
@@ -61,6 +65,10 @@ def main():
             
             # Vérifier si la partie est terminée
             if jeu.partie_terminee:
+                # Libérer la souris et afficher le curseur avant les écrans de fin
+                pygame.mouse.set_visible(True)
+                pygame.event.set_grab(False)
+                
                 # Si le joueur veut retourner au menu (depuis le menu pause)
                 if jeu.retour_menu:
                     partie_en_cours = False
