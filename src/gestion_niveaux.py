@@ -64,8 +64,9 @@ def initialiser_niveau(niveau, TYPES_BRIQUES):
     liste_briques = []
     liste_bonus = []
     
-    # Générer les briques pour ce niveau
-    generer_briques(couleurs_niveau, liste_briques, XMAX, TYPES_BRIQUES)
+    # Générer les briques pour ce niveau en passant le niveau actuel
+    # pour ajuster la difficulté en fonction du niveau
+    generer_briques(couleurs_niveau, liste_briques, XMAX, TYPES_BRIQUES, niveau)
     
     # Réinitialiser la balle sur la raquette
     balles = [Balle()]

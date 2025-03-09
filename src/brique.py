@@ -36,7 +36,7 @@ class Brique:
         self.height = self.hauteur
 
         # Probabilité de générer un bonus quand la brique est détruite (en pourcentage)
-        self.chance_bonus = 30  # 30% de chance
+        self.chance_bonus = 20  # 20% de chance
 
     def en_vie(self):
         """

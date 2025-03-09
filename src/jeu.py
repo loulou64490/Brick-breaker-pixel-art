@@ -71,6 +71,10 @@ class Jeu:
         if raquette:
             self.balles = balles
             self.raquette = raquette
+        
+        # Afficher les informations du niveau (pour le débogage)
+        description = NIVEAUX[niveau].get('description', f'Niveau {niveau}')
+        print(f"Niveau {niveau} chargé: {description}")
 
     def gestion_evenements(self):
         """Gère les événements utilisateur comme les clics et la fermeture du jeu."""
@@ -106,7 +110,7 @@ class Jeu:
                         for balle in self.balles:
                             if balle.sur_raquette:
                                 balle.sur_raquette = False
-                                balle.vitesse_par_angle(90)
+                                balle.vitesse_par_angle(random.randint(88, 92))
         
         return False  # Ne pas quitter le jeu
 
@@ -197,8 +201,10 @@ class Jeu:
                 # Victoire totale si tous les niveaux sont complétés
                 self.partie_terminee = True
                 self.victoire_totale = True
+                print("Félicitations ! Vous avez terminé tous les niveaux !")
             else:
                 # Charger le niveau suivant
+                print(f"Niveau {self.niveau-1} terminé ! Passage au niveau {self.niveau}")
                 self.charger_niveau(self.niveau)
     
     def affichage(self):
